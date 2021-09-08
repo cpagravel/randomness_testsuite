@@ -154,7 +154,7 @@ class RandomExcursions:
         result = []
         count = 0
         for item in p_values:
-            result.append((f"random_excursions_test_{states[count]}", item, (item >= 0.01)))
+            result.append((f"variant_test_{states[count]}", item, (item >= 0.01)))
             count += 1
 
         return result

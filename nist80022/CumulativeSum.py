@@ -74,9 +74,9 @@ class CumulativeSums:
             print("  {:<40}{:>20}".format("\tMode:\t\t\t\t", mode))
             print("  {:<40}{:>20}".format("\tValue of z:\t\t\t", abs_max))
             print("  {:<40}{:>20}".format("\tP-Value:\t\t\t", p_value))
+        test_type = ""
         if mode == 0:
             test_type = "forwards"
         elif mode == 1:
             test_type = "backwards"
-        test_type = ""
         return [(f"cumulative_sums_test_{test_type}", p_value, (p_value >= 0.01))]
