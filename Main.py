@@ -9,19 +9,19 @@ from GUI import Input
 from GUI import LabelTag
 from GUI import RandomExcursionTestItem
 from GUI import TestItem
-from Tools import Tools
+from nist80022.Tools import Tools
 
-from ApproximateEntropy import ApproximateEntropy as aet
-from Complexity import ComplexityTest as ct
-from CumulativeSum import CumulativeSums as cst
-from FrequencyTest import FrequencyTest as ft
-from Matrix import Matrix as mt
-from RandomExcursions import RandomExcursions as ret
-from RunTest import RunTest as rt
-from Serial import Serial as serial
-from Spectral import SpectralTest as st
-from TemplateMatching import TemplateMatching as tm
-from Universal import Universal as ut
+from nist80022.ApproximateEntropy import ApproximateEntropy as aet
+from nist80022.Complexity import ComplexityTest as ct
+from nist80022.CumulativeSum import CumulativeSums as cst
+from nist80022.FrequencyTest import FrequencyTest as ft
+from nist80022.Matrix import Matrix as mt
+from nist80022.RandomExcursions import RandomExcursions as ret
+from nist80022.RunTest import RunTest as rt
+from nist80022.Serial import Serial as serial
+from nist80022.Spectral import SpectralTest as st
+from nist80022.TemplateMatching import TemplateMatching as tm
+from nist80022.Universal import Universal as ut
 
 class Main(Frame):
 

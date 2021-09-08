@@ -1,15 +1,15 @@
 import os
-from FrequencyTest import FrequencyTest
-from RunTest import RunTest
-from Matrix import Matrix
-from Spectral import SpectralTest
-from TemplateMatching import TemplateMatching
-from Universal import Universal
-from Complexity import ComplexityTest
-from Serial import Serial
-from ApproximateEntropy import ApproximateEntropy
-from CumulativeSum import CumulativeSums
-from RandomExcursions import RandomExcursions
+from nist80022.FrequencyTest import FrequencyTest
+from nist80022.RunTest import RunTest
+from nist80022.Matrix import Matrix
+from nist80022.Spectral import SpectralTest
+from nist80022.TemplateMatching import TemplateMatching
+from nist80022.Universal import Universal
+from nist80022.Complexity import ComplexityTest
+from nist80022.Serial import Serial
+from nist80022.ApproximateEntropy import ApproximateEntropy
+from nist80022.CumulativeSum import CumulativeSums
+from nist80022.RandomExcursions import RandomExcursions
 
 # Open Data File and read the binary data of e
 data_path = os.path.join(os.getcwd(), 'data', 'data.e')
@@ -28,7 +28,7 @@ print('2.03. Run Test:\t\t\t\t\t\t\t\t\t\t', RunTest.run_test(binary_data[:10000
 print('2.04. Run Test (Longest Run of Ones): \t\t\t\t', RunTest.longest_one_block_test(binary_data[:1000000]))
 print('2.05. Binary Matrix Rank Test:\t\t\t\t\t\t', Matrix.binary_matrix_rank_text(binary_data[:1000000]))
 print('2.06. Discrete Fourier Transform (Spectral) Test:\t', SpectralTest.spectral_test(binary_data[:1000000]))
-print('2.07. Non-overlapping Template Matching Test:\t\t', TemplateMatching.non_overlapping_test(binary_data[:1000000], '000000001'))
+print('2.07. Non-overlapping Template Matching Test:\t\t', TemplateMatching.non_overlapping_test(binary_data[:1000000], template_pattern='000000001'))
 print('2.08. Overlappong Template Matching Test: \t\t\t', TemplateMatching.overlapping_patterns(binary_data[:1000000]))
 print('2.09. Universal Statistical Test:\t\t\t\t\t', Universal.statistical_test(binary_data[:1000000]))
 print('2.10. Linear Complexity Test:\t\t\t\t\t\t', ComplexityTest.linear_complexity_test(binary_data[:1000000]))
