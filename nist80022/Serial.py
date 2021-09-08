@@ -1,9 +1,13 @@
-from numpy import zeros as zeros
-from scipy.special import gammaincc as gammaincc
+from typing import List, Tuple
+
+import numpy as np
+
+from scipy.special import gammaincc
+
 class Serial:
 
     @staticmethod
-    def serial_test(binary_data:str, verbose=False, pattern_length=16):
+    def serial_test(binary_data:str, verbose=False, pattern_length=16) -> List[Tuple[str, float, bool]]:
         """
         From the NIST documentation http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
 
@@ -16,7 +20,8 @@ class Serial:
         :param      binary_data:        a binary string
         :param      verbose             True to display the debug message, False to turn off debug message
         :param      pattern_length:     the length of the pattern (m)
-        :return:    ((p_value1, bool), (p_value2, bool)) A tuple which contain the p_value and result of serial_test(True or False)
+        :return:    [(test_name, p_value1, bool), (test_name, p_value2, bool)] A tuple containing
+            the test_name, p_value and pass/fail result of both test components.
         """
         length_of_binary_data = len(binary_data)
         binary_data += binary_data[:(pattern_length -1):]
@@ -29,9 +34,9 @@ class Serial:
         # Step 02: Determine the frequency of all possible overlapping m-bit blocks,
         # all possible overlapping (m-1)-bit blocks and
         # all possible overlapping (m-2)-bit blocks.
-        vobs_01 = zeros(int(max_pattern[0:pattern_length:], 2) + 1)
-        vobs_02 = zeros(int(max_pattern[0:pattern_length - 1:], 2) + 1)
-        vobs_03 = zeros(int(max_pattern[0:pattern_length - 2:], 2) + 1)
+        vobs_01 = np.zeros(int(max_pattern[0:pattern_length:], 2) + 1)
+        vobs_02 = np.zeros(int(max_pattern[0:pattern_length - 1:], 2) + 1)
+        vobs_03 = np.zeros(int(max_pattern[0:pattern_length - 2:], 2) + 1)
 
         for i in range(length_of_binary_data):
             # Work out what pattern is observed
@@ -42,7 +47,7 @@ class Serial:
         vobs = [vobs_01, vobs_02, vobs_03]
 
         # Step 03 Compute for ψs
-        sums = zeros(3)
+        sums = np.zeros(3)
         for i in range(3):
             for j in range(len(vobs[i])):
                 sums[i] += pow(vobs[i][j], 2)
@@ -66,4 +71,4 @@ class Serial:
             print('\tP-Value 02:\t\t\t', p_value_02)
             print('DEBUG END.')
 
-        return ((p_value_01, p_value_01 >= 0.01), (p_value_02, p_value_02 >= 0.01))
+        return [("serial_test_1", p_value_01, p_value_01 >= 0.01), ("serial_test_2", p_value_02, p_value_02 >= 0.01)]

@@ -1,12 +1,16 @@
+import math
+from typing import List, Tuple
+
+import numpy as np
+
 from .BinaryMatrix import BinaryMatrix as bm
-from math import exp as exp
-from math import floor as floor
-from numpy import zeros as zeros
 
 class Matrix:
 
     @staticmethod
-    def binary_matrix_rank_text(binary_data:str, verbose=False, rows_in_matrix = 32, columns_in_matrix = 32):
+    def binary_matrix_rank_text(
+            binary_data:str, verbose=False, rows_in_matrix = 32, columns_in_matrix = 32
+    ) -> List[Tuple[str, float, bool]]:
         """
         Note that this description is taken from the NIST documentation [1]
         [1] http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
@@ -18,13 +22,14 @@ class Matrix:
         :param      verbose             True to display the debug messgae, False to turn off debug message
         :param      rows_in_matrix      Fixed for 32
         :param      columns_in_matrix   Fixed for 32
-        :return     (p_value, bool)     A tuple which contain the p_value and result of frequency_test(True or False)
+        :return     [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
 
         shape = (rows_in_matrix, columns_in_matrix)
         length_of_binary_data = len(binary_data)
         block_size = int(rows_in_matrix * columns_in_matrix)
-        number_of_block = floor(length_of_binary_data / block_size)
+        number_of_block = math.floor(length_of_binary_data / block_size)
         block_start = 0
         block_end = block_size
 
@@ -33,7 +38,7 @@ class Matrix:
 
             for im in range(number_of_block):
                 block_data = binary_data[block_start:block_end]
-                block = zeros(len(block_data))
+                block = np.zeros(len(block_data))
 
                 for count in range(len(block_data)):
                     if block_data[count] == '1':
@@ -63,19 +68,18 @@ class Matrix:
             for i in range(len(pi)):
                 xObs += pow((max_ranks[i] - pi[i] * number_of_block), 2.0) / (pi[i] * number_of_block)
 
-            p_value = exp(-xObs / 2)
+            p_value = math.exp(-xObs / 2)
 
             if verbose:
-                print('Binary Matrix Rank Test DEBUG BEGIN:')
-                print("\tLength of input:\t", length_of_binary_data)
-                print("\tSize of Row:\t\t", rows_in_matrix)
-                print("\tSize of Column:\t\t", columns_in_matrix)
-                print('\tValue of N:\t\t\t', number_of_block)
-                print('\tValue of Pi:\t\t', pi)
-                print('\tValue of xObs:\t\t', xObs)
-                print('\tP-Value:\t\t\t', p_value)
-                print('DEBUG END.')
+                print("Binary Matrix Rank Test")
+                print("  {:<40}{:>20}".format("Length of input:", length_of_binary_data))
+                print("  {:<40}{:>20}".format("Size of Row:", rows_in_matrix))
+                print("  {:<40}{:>20}".format("Size of Column:", columns_in_matrix))
+                print("  {:<40}{:>20}".format("Value of N:", number_of_block))
+                print("  {:<40}{:>20}".format("Value of Pi:", pi))
+                print("  {:<40}{:>20}".format("Value of xObs:", xObs))
+                print("  {:<40}{:>20}".format("P-Value:", p_value))
 
-            return (p_value, (p_value >= 0.01))
+            return [("binary_matrix_rank_text", p_value, (p_value >= 0.01))]
         else:
-            return (-1.0, False)
+            return [("binary_matrix_rank_text", -1.0, False)]

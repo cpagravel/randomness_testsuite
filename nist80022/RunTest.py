@@ -1,14 +1,14 @@
-from math import fabs as fabs
-from math import floor as floor
-from math import sqrt as sqrt
-from scipy.special import erfc as erfc
-from scipy.special import gammaincc as gammaincc
-from scipy import zeros as zeros
+import math
+from typing import List, Tuple
+
+import scipy
+from scipy.special import erfc
+from scipy.special import gammaincc
 
 class RunTest:
 
     @staticmethod
-    def run_test(binary_data:str, verbose=False):
+    def run_test(binary_data:str, verbose=False) -> List[Tuple[str, float, bool]]:
         """
         The focus of this test is the total number of runs in the sequence,
         where a run is an uninterrupted sequence of identical bits.
@@ -20,7 +20,8 @@ class RunTest:
 
         :param      binary_data:        The seuqnce of bit being tested
         :param      verbose             True to display the debug messgae, False to turn off debug message
-        :return:    (p_value, bool)     A tuple which contain the p_value and result of frequency_test(True or False)
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
         one_count = 0
         vObs = 0
@@ -28,7 +29,7 @@ class RunTest:
 
         # Predefined tau = 2 / sqrt(n)
         # TODO Confirm with Frank about the discrepancy between the formula and the sample of 2.3.8
-        tau = 2 / sqrt(length_of_binary_data)
+        tau = 2 / math.sqrt(length_of_binary_data)
 
         # Step 1 - Compute the pre-test proportion πof ones in the input sequence: π = Σjεj / n
         one_count = binary_data.count('1')
@@ -48,7 +49,7 @@ class RunTest:
             vObs += 1
 
             # Step 4 - Compute p_value = erfc((|vObs − 2nπ * (1−π)|)/(2 * sqrt(2n) * π * (1−π)))
-            p_value = erfc(abs(vObs - (2 * (length_of_binary_data) * pi * (1 - pi))) / (2 * sqrt(2 * length_of_binary_data) * pi * (1 - pi)))
+            p_value = erfc(abs(vObs - (2 * (length_of_binary_data) * pi * (1 - pi))) / (2 * math.sqrt(2 * length_of_binary_data) * pi * (1 - pi)))
 
         if verbose:
             print('Run Test DEBUG BEGIN:')
@@ -61,10 +62,10 @@ class RunTest:
             print('\tP-Value:\t\t\t\t\t\t', p_value)
             print('DEBUG END.')
 
-        return (p_value, (p_value > 0.01))
+        return [("run_test", p_value, (p_value > 0.01))]
 
     @staticmethod
-    def longest_one_block_test(binary_data:str, verbose=False):
+    def longest_one_block_test(binary_data:str, verbose=False) -> List[Tuple[str, float, bool]]:
         """
         The focus of the test is the longest run of ones within M-bit blocks. The purpose of this test is to determine
         whether the length of the longest run of ones within the tested sequence is consistent with the length of the
@@ -74,7 +75,8 @@ class RunTest:
 
         :param      binary_data:        The sequence of bits being tested
         :param      verbose             True to display the debug messgae, False to turn off debug message
-        :return:    (p_value, bool)     A tuple which contain the p_value and result of frequency_test(True or False)
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
         length_of_binary_data = len(binary_data)
         # print('Length of binary string: ', length_of_binary_data)
@@ -100,12 +102,12 @@ class RunTest:
             v_values = [10, 11, 12, 13, 14, 15, 16]
             pi_values = [0.0882, 0.2092, 0.2483, 0.1933, 0.1208, 0.0675, 0.0727]
 
-        number_of_blocks = floor(length_of_binary_data / m)
+        number_of_blocks = math.floor(length_of_binary_data / m)
         block_start = 0
         block_end = m
         xObs = 0
         # This will intialized an array with a number of 0 you specified.
-        frequencies = zeros(k + 1)
+        frequencies = scipy.zeros(k + 1)
 
         # print('Number of Blocks: ', number_of_blocks)
 
@@ -158,4 +160,4 @@ class RunTest:
             print('\tP-Value:\t\t\t\t\t\t', p_value)
             print('DEBUG END.')
 
-        return (p_value, (p_value > 0.01))
+        return [("longest_one_block_test", p_value, (p_value > 0.01))]

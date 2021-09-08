@@ -1,15 +1,14 @@
-from math import fabs as fabs
-from math import floor as floor
-from math import log as log
-from math import sqrt as sqrt
-from numpy import where as where
+import math
+from typing import List, Tuple
+
+import numpy as np
 from scipy import fftpack as sff
 from scipy.special import erfc as erfc
 
 class SpectralTest:
 
     @staticmethod
-    def spectral_test(binary_data:str, verbose=False):
+    def spectral_test(binary_data:str, verbose=False) -> List[Tuple[str, float, bool]]:
         """
         Note that this description is taken from the NIST documentation [1]
         [1] http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
@@ -40,34 +39,33 @@ class SpectralTest:
 
         # Step 3 - Calculate M = modulus(S´) ≡ |S'|, where S´ is the substring consisting of the first n/2
         # elements in S, and the modulus function produces a sequence of peak heights.
-        slice = floor(length_of_binary_data / 2)
+        slice = math.floor(length_of_binary_data / 2)
         modulus = abs(spectral[0:slice])
 
         # Step 4 - Compute T = sqrt(log(1 / 0.05) * length_of_string) the 95 % peak height threshold value.
         # Under an assumption of randomness, 95 % of the values obtained from the test should not exceed T.
-        tau = sqrt(log(1 / 0.05) * length_of_binary_data)
+        tau = math.sqrt(math.log(1 / 0.05) * length_of_binary_data)
 
         # Step 5 - Compute N0 = .95n/2. N0 is the expected theoretical (95 %) number of peaks
         # (under the assumption of randomness) that are less than T.
         n0 = 0.95 * (length_of_binary_data / 2)
 
         # Step 6 - Compute N1 = the actual observed number of peaks in M that are less than T.
-        n1 = len(where(modulus < tau)[0])
+        n1 = len(np.where(modulus < tau)[0])
 
         # Step 7 - Compute d = (n_1 - n_0) / sqrt (length_of_string * (0.95) * (0.05) / 4)
-        d = (n1 - n0) / sqrt(length_of_binary_data * (0.95) * (0.05) / 4)
+        d = (n1 - n0) / math.sqrt(length_of_binary_data * (0.95) * (0.05) / 4)
 
         # Step 8 - Compute p_value = erfc(abs(d)/sqrt(2))
-        p_value = erfc(fabs(d) / sqrt(2))
+        p_value = erfc(math.fabs(d) / math.sqrt(2))
 
         if verbose:
-            print('Discrete Fourier Transform (Spectral) Test DEBUG BEGIN:')
-            print('\tLength of Binary Data:\t', length_of_binary_data)
-            print('\tValue of T:\t\t\t\t', tau)
-            print('\tValue of n1:\t\t\t', n1)
-            print('\tValue of n0:\t\t\t', n0)
-            print('\tValue of d:\t\t\t\t', d)
-            print('\tP-Value:\t\t\t\t', p_value)
-            print('DEBUG END.')
+            print("Discrete Fourier Transform (Spectral) Test:")
+            print("  {:<40}{:>20}".format("Length of Binary Data:", length_of_binary_data))
+            print("  {:<40}{:>20}".format("Value of T:", tau))
+            print("  {:<40}{:>20}".format("Value of n1:", n1))
+            print("  {:<40}{:>20}".format("Value of n0:", n0))
+            print("  {:<40}{:>20}".format("Value of d:", d))
+            print("  {:<40}{:>20}".format("P-Value:", p_value))
 
-        return (p_value, (p_value >= 0.01))
+        return [("spectral_test", p_value, (p_value >= 0.01))]

@@ -1,15 +1,18 @@
-from math import floor as floor
-from numpy import array as array
-from numpy import exp as exp
-from numpy import zeros as zeros
-from scipy.special import gammaincc as gammaincc
-from scipy.special import hyp1f1 as hyp1f1
+import math
+from typing import List, Tuple
+
+import numpy as np
+
+from scipy.special import gammaincc
+from scipy.special import hyp1f1
 
 
 class TemplateMatching:
 
     @staticmethod
-    def non_overlapping_test(binary_data:str, verbose=False, template_pattern='000000001', block=8):
+    def non_overlapping_test(
+            binary_data:str, verbose=False, template_pattern='000000001', block=8
+    ) -> List[Tuple[str, float, bool]]:
         """
         Note that this description is taken from the NIST documentation [1]
         [1] http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
@@ -22,13 +25,14 @@ class TemplateMatching:
         :param      template_pattern:   The pattern to match to
         :param      verbose             True to display the debug messgae, False to turn off debug message
         :param      block               The number of independent blocks. Has been fixed at 8 in the test code.
-        :return:    (p_value, bool)     A tuple which contain the p_value and result of frequency_test(True or False)
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
 
         length_of_binary = len(binary_data)
         pattern_size = len(template_pattern)
-        block_size = floor(length_of_binary / block)
-        pattern_counts = zeros(block)
+        block_size = math.floor(length_of_binary / block)
+        pattern_counts = np.zeros(block)
 
         # For each block in the data
         for count in range(block):
@@ -69,10 +73,12 @@ class TemplateMatching:
             print('\tP-Value:\t\t\t\t', p_value)
             print('DEBUG END.')
 
-        return (p_value, (p_value >= 0.01))
+        return [("non_overlapping_test", p_value, (p_value >= 0.01))]
 
     @staticmethod
-    def overlapping_patterns(binary_data:str, verbose=False, pattern_size=9, block_size=1032):
+    def overlapping_patterns(
+            binary_data:str, verbose=False, pattern_size=9, block_size=1032
+    ) -> List[Tuple[str, float, bool]]:
         """
         Note that this description is taken from the NIST documentation [1]
         [1] http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
@@ -86,14 +92,15 @@ class TemplateMatching:
         :param      verbose         True to display the debug messgae, False to turn off debug message
         :param      pattern_size:   the length of the pattern
         :param      block_size:     the length of the block
-        :return:    (p_value, bool) A tuple which contain the p_value and result of frequency_test(True or False)
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
         length_of_binary_data = len(binary_data)
         pattern = ''
-        for count in range(pattern_size):
+        for _ in range(pattern_size):
             pattern += '1'
 
-        number_of_block = floor(length_of_binary_data / block_size)
+        number_of_block = math.floor(length_of_binary_data / block_size)
 
         # λ = (M-m+1)/pow(2, m)
         lambda_val = float(block_size - pattern_size + 1) / pow(2, pattern_size)
@@ -101,10 +108,10 @@ class TemplateMatching:
         eta = lambda_val / 2.0
 
         pi = [TemplateMatching.get_prob(i, eta) for i in range(5)]
-        diff = float(array(pi).sum())
+        diff = float(np.array(pi).sum())
         pi.append(1.0 - diff)
 
-        pattern_counts = zeros(6)
+        pattern_counts = np.zeros(6)
         for i in range(number_of_block):
             block_start = i * block_size
             block_end = block_start + block_size
@@ -129,19 +136,18 @@ class TemplateMatching:
         p_value = gammaincc(5.0 / 2.0, xObs / 2.0)
 
         if verbose:
-            print('Overlapping Template Test DEBUG BEGIN:')
-            print("\tLength of input:\t\t", length_of_binary_data)
-            print('\tValue of Vs:\t\t\t', pattern_counts)
-            print('\tValue of xObs:\t\t\t', xObs)
-            print('\tP-Value:\t\t\t\t', p_value)
-            print('DEBUG END.')
+            print("Overlapping Template Test:")
+            print("  {:<40}{:>20}".format("Length of input:", length_of_binary_data))
+            print("  {:<40}{:>20}".format("Value of Vs:", pattern_counts))
+            print("  {:<40}{:>20}".format("Value of xObs:", xObs))
+            print("  {:<40}{:>20}".format("P-Value:", p_value))
 
 
-        return (p_value, (p_value >= 0.01))
+        return [("overlapping_patterns_test", p_value, (p_value >= 0.01))]
 
     @staticmethod
     def get_prob(u, x):
-        out = 1.0 * exp(-x)
+        out = 1.0 * np.exp(-x)
         if u != 0:
-            out = 1.0 * x * exp(2 * -x) * (2 ** -u) * hyp1f1(u + 1, 2, x)
+            out = 1.0 * x * np.exp(2 * -x) * (2 ** -u) * hyp1f1(u + 1, 2, x)
         return out

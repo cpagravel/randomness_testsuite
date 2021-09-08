@@ -1,4 +1,4 @@
-from copy import copy as copy
+import copy
 
 class BinaryMatrix:
 
@@ -101,7 +101,7 @@ class BinaryMatrix:
         :param ix: the row we want to swap it with
         :return: 1
         """
-        temp = copy(self.A[i, :])
+        temp = copy.copy(self.A[i, :])
         self.A[i, :] = self.A[ix, :]
         self.A[ix, :] = temp
         return 1

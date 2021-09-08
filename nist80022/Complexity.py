@@ -1,13 +1,15 @@
-from copy import copy as copy
-from numpy import dot as dot
-from numpy import histogram as histogram
-from numpy import zeros as zeros
-from scipy.special import gammaincc as gammaincc
+import copy
+from typing import List, Tuple
+
+import numpy as np
+from scipy.special import gammaincc
 
 class ComplexityTest:
 
     @staticmethod
-    def linear_complexity_test(binary_data:str, verbose=False, block_size=500):
+    def linear_complexity_test(
+            binary_data:str, verbose=False, block_size=500
+    ) -> List[Tuple[str, float, bool]]:
         """
         Note that this description is taken from the NIST documentation [1]
         [1] http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
@@ -18,8 +20,8 @@ class ComplexityTest:
         :param      binary_data:    a binary string
         :param      verbose         True to display the debug messgae, False to turn off debug message
         :param      block_size:     Size of the block
-        :return:    (p_value, bool) A tuple which contain the p_value and result of frequency_test(True or False)
-
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
 
         length_of_binary_data = len(binary_data)
@@ -51,7 +53,7 @@ class ComplexityTest:
                 complexities.append(ComplexityTest.berlekamp_massey_algorithm(block))
 
             t = ([-1.0 * (((-1) ** block_size) * (chunk - mean) + 2.0 / 9) for chunk in complexities])
-            vg = histogram(t, bins=[-9999999999, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 9999999999])[0][::-1]
+            vg = np.histogram(t, bins=[-9999999999, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 9999999999])[0][::-1]
             im = ([((vg[ii] - number_of_block * pi[ii]) ** 2) / (number_of_block * pi[ii]) for ii in range(7)])
 
             xObs = 0.0
@@ -73,9 +75,9 @@ class ComplexityTest:
                 print('DEBUG END.')
 
 
-            return (p_value, (p_value >= 0.01))
+            return [("linear_complexity_test", p_value, (p_value >= 0.01))]
         else:
-            return (-1.0, False)
+            return [("linear_complexity_test", -1.0, False)]
 
     @staticmethod
     def berlekamp_massey_algorithm(block_data):
@@ -90,8 +92,8 @@ class ComplexityTest:
         :return:
         """
         n = len(block_data)
-        c = zeros(n)
-        b = zeros(n)
+        c = np.zeros(n)
+        b = np.zeros(n)
         c[0], b[0] = 1, 1
         l, m, i = 0, -1, 0
         int_data = [int(el) for el in block_data]
@@ -99,10 +101,10 @@ class ComplexityTest:
             v = int_data[(i - l):i]
             v = v[::-1]
             cc = c[1:l + 1]
-            d = (int_data[i] + dot(v, cc)) % 2
+            d = (int_data[i] + np.dot(v, cc)) % 2
             if d == 1:
-                temp = copy(c)
-                p = zeros(n)
+                temp = copy.copy(c)
+                p = np.zeros(n)
                 for j in range(0, l):
                     if b[j] == 1:
                         p[j + i - m] = 1

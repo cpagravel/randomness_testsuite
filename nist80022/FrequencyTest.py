@@ -1,13 +1,13 @@
-from math import fabs as fabs
-from math import floor as floor
-from math import sqrt as sqrt
-from scipy.special import erfc as erfc
-from scipy.special import gammaincc as gammaincc
+import math
+from typing import List, Tuple
+
+from scipy.special import erfc
+from scipy.special import gammaincc
 
 class FrequencyTest:
 
     @staticmethod
-    def monobit_test(binary_data:str, verbose=False):
+    def monobit_test(binary_data:str, verbose=False) -> List[Tuple[str, float, bool]]:
         """
         The focus of the test is the proportion of zeroes and ones for the entire sequence.
         The purpose of this test is to determine whether the number of ones and zeros in a sequence are approximately
@@ -20,8 +20,8 @@ class FrequencyTest:
 
         :param      binary_data         The seuqnce of bit being tested
         :param      verbose             True to display the debug messgae, False to turn off debug message
-        :return:    (p_value, bool)     A tuple which contain the p_value and result of frequency_test(True or False)
-
+        :return:    [(test_name, p_value1, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
 
         length_of_bit_string = len(binary_data)
@@ -38,10 +38,10 @@ class FrequencyTest:
                 count += 1
 
         # Compute the test statistic
-        sObs = count / sqrt(length_of_bit_string)
+        sObs = count / math.sqrt(length_of_bit_string)
 
         # Compute p-Value
-        p_value = erfc(fabs(sObs) / sqrt(2))
+        p_value = erfc(math.fabs(sObs) / math.sqrt(2))
 
         if verbose:
             print('Frequency Test (Monobit Test) DEBUG BEGIN:')
@@ -50,12 +50,12 @@ class FrequencyTest:
             print('\t# of \'1\':\t\t\t', binary_data.count('1'))
             print('\tS(n):\t\t\t\t', count)
             print('\tsObs:\t\t\t\t', sObs)
-            print('\tf:\t\t\t\t\t',fabs(sObs) / sqrt(2))
+            print('\tf:\t\t\t\t\t',math.fabs(sObs) / math.sqrt(2))
             print('\tP-Value:\t\t\t', p_value)
             print('DEBUG END.')
 
         # return a p_value and randomness result
-        return (p_value, (p_value >= 0.01))
+        return [("monobit_test", p_value, (p_value >= 0.01))]
 
     @staticmethod
     def block_frequency(binary_data:str, block_size=128, verbose=False):
@@ -68,7 +68,8 @@ class FrequencyTest:
         :param      binary_data:        The length of each block
         :param      block_size:         The seuqnce of bit being tested
         :param      verbose             True to display the debug messgae, False to turn off debug message
-        :return:    (p_value, bool)     A tuple which contain the p_value and result of frequency_test(True or False)
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
 
         length_of_bit_string = len(binary_data)
@@ -78,7 +79,7 @@ class FrequencyTest:
             block_size = length_of_bit_string
 
         # Compute the number of blocks based on the input given.  Discard the remainder
-        number_of_blocks = floor(length_of_bit_string / block_size)
+        number_of_blocks = math.floor(length_of_bit_string / block_size)
 
         if number_of_blocks == 1:
             # For block size M=1, this test degenerates to test 1, the Frequency (Monobit) test.
@@ -116,14 +117,13 @@ class FrequencyTest:
         p_value = gammaincc(number_of_blocks / 2, result / 2)
 
         if verbose:
-            print('Frequency Test (Block Frequency Test) DEBUG BEGIN:')
-            print("\tLength of input:\t", length_of_bit_string)
-            print("\tSize of Block:\t\t", block_size)
-            print('\tNumber of Blocks:\t', number_of_blocks)
-            print('\tCHI Squared:\t\t', result)
-            print('\t1st:\t\t\t\t', number_of_blocks / 2)
-            print('\t2nd:\t\t\t\t', result / 2)
-            print('\tP-Value:\t\t\t', p_value)
-            print('DEBUG END.')
+            print("Frequency Test (Block Frequency Test)")
+            print("  {:<40}{:>20}".format("Length of input:", length_of_bit_string))
+            print("  {:<40}{:>20}".format("Size of Block:", block_size))
+            print("  {:<40}{:>20}".format("Number of Blocks:", number_of_blocks))
+            print("  {:<40}{:>20}".format("CHI Squared:", result))
+            print("  {:<40}{:>20}".format("1st:", number_of_blocks / 2))
+            print("  {:<40}{:>20}".format("2nd:", result / 2))
+            print("  {:<40}{:>20}".format("P-Value:", p_value))
 
-        return (p_value, (p_value >= 0.01))
+        return [(f"block_frequency_block_size_{block_size}", p_value, (p_value >= 0.01))]

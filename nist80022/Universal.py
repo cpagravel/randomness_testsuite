@@ -1,13 +1,15 @@
-from math import floor as floor
-from math import log as log
-from math import sqrt as sqrt
-from numpy import zeros as zeros
-from scipy.special import erfc as erfc
+import math
+from typing import List, Tuple
+
+import numpy as np
+
+from scipy.special import erfc
+
 
 class Universal:
 
     @staticmethod
-    def statistical_test(binary_data:str, verbose=False):
+    def statistical_test(binary_data:str, verbose=False) -> List[Tuple[str, float, bool]]:
         """
         Note that this description is taken from the NIST documentation [1]
         [1] http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
@@ -19,31 +21,32 @@ class Universal:
 
         :param      binary_data:    a binary string
         :param      verbose             True to display the debug messgae, False to turn off debug message
-        :return:    (p_value, bool) A tuple which contain the p_value and result of frequency_test(True or False)
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
         length_of_binary_data = len(binary_data)
         pattern_size = 5
         if length_of_binary_data >= 387840:
             pattern_size = 6
-        if length_of_binary_data >= 904960:
+        elif length_of_binary_data >= 904960:
             pattern_size = 7
-        if length_of_binary_data >= 2068480:
+        elif length_of_binary_data >= 2068480:
             pattern_size = 8
-        if length_of_binary_data >= 4654080:
+        elif length_of_binary_data >= 4654080:
             pattern_size = 9
-        if length_of_binary_data >= 10342400:
+        elif length_of_binary_data >= 10342400:
             pattern_size = 10
-        if length_of_binary_data >= 22753280:
+        elif length_of_binary_data >= 22753280:
             pattern_size = 11
-        if length_of_binary_data >= 49643520:
+        elif length_of_binary_data >= 49643520:
             pattern_size = 12
-        if length_of_binary_data >= 107560960:
+        elif length_of_binary_data >= 107560960:
             pattern_size = 13
-        if length_of_binary_data >= 231669760:
+        elif length_of_binary_data >= 231669760:
             pattern_size = 14
-        if length_of_binary_data >= 496435200:
+        elif length_of_binary_data >= 496435200:
             pattern_size = 15
-        if length_of_binary_data >= 1059061760:
+        elif length_of_binary_data >= 1059061760:
             pattern_size = 16
 
         if 5 < pattern_size < 16:
@@ -54,10 +57,10 @@ class Universal:
 
             # How long the state list should be
             num_ints = int(ones, 2)
-            vobs = zeros(num_ints + 1)
+            vobs = np.zeros(num_ints + 1)
 
             # Keeps track of the blocks, and whether were are initializing or summing
-            num_blocks = floor(length_of_binary_data / pattern_size)
+            num_blocks = math.floor(length_of_binary_data / pattern_size)
             # Q = 10 * pow(2, pattern_size)
             init_bits = 10 * pow(2, pattern_size)
 
@@ -68,7 +71,7 @@ class Universal:
             variance = [0, 0, 0, 0, 0, 0, 2.954, 3.125, 3.238, 3.311, 3.356, 3.384, 3.401, 3.410, 3.416, 3.419, 3.421]
             expected = [0, 0, 0, 0, 0, 0, 5.2177052, 6.1962507, 7.1836656, 8.1764248, 9.1723243,
                         10.170032, 11.168765, 12.168070, 13.167693, 14.167488, 15.167379]
-            sigma = c * sqrt(variance[pattern_size] / test_bits)
+            sigma = c * math.sqrt(variance[pattern_size] / test_bits)
 
             cumsum = 0.0
             # Examine each of the K blocks in the test segment and determine the number of blocks since the
@@ -88,24 +91,23 @@ class Universal:
                 else:
                     initial = vobs[int_rep]
                     vobs[int_rep] = i + 1
-                    cumsum += log(i - initial + 1, 2)
+                    cumsum += math.log(i - initial + 1, 2)
 
             # Compute the statistic
             phi = float(cumsum / test_bits)
-            stat = abs(phi - expected[pattern_size]) / (float(sqrt(2)) * sigma)
+            stat = abs(phi - expected[pattern_size]) / (float(math.sqrt(2)) * sigma)
 
             # Compute for P-Value
             p_value = erfc(stat)
 
             if verbose:
-                print('Maurer\'s Universal Statistical Test DEBUG BEGIN:')
-                print("\tLength of input:\t\t", length_of_binary_data)
-                print('\tLength of each block:\t', pattern_size)
-                print('\tNumber of Blocks:\t\t', init_bits)
-                print('\tValue of phi:\t\t\t', phi)
-                print('\tP-Value:\t\t\t\t', p_value)
-                print('DEBUG END.')
+                print("Maurer\'s Universal Statistical Test:")
+                print("  {:<40}{:>20}".format("Length of input:", length_of_binary_data))
+                print("  {:<40}{:>20}".format("Length of each block:", pattern_size))
+                print("  {:<40}{:>20}".format("Number of Blocks:", init_bits))
+                print("  {:<40}{:>20}".format("Value of phi:", phi))
+                print("  {:<40}{:>20}".format("P-Value:", p_value))
 
-            return (p_value, (p_value>=0.01))
+            return [("universal_statistic", p_value, (p_value>=0.01))]
         else:
-            return (-1.0, False)
+            return [("universal_statistic", -1.0, False)]

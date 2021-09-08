@@ -1,22 +1,15 @@
-from math import isnan as isnan
-from numpy import abs as abs
-from numpy import append as append
-from numpy import array as array
-from numpy import clip as clip
-from numpy import cumsum as cumsum
-from numpy import ones as ones
-from numpy import sqrt as sqrt
-from numpy import sum as sum
-from numpy import transpose as transpose
-from numpy import where as where
-from numpy import zeros as zeros
-from scipy.special import erfc as erfc
-from scipy.special import gammaincc as gammaincc
+from typing import List, Tuple
+
+import numpy as np
+from scipy.special import erfc
+from scipy.special import gammaincc
 
 class RandomExcursions:
 
     @staticmethod
-    def random_excursions_test(binary_data:str, verbose=False, state=1):
+    def random_excursions_test(
+            binary_data:str, verbose=False, state=1
+    ) -> List[Tuple[str, float, bool]]:
         """
         from the NIST documentation http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-22r1a.pdf
 
@@ -27,13 +20,14 @@ class RandomExcursions:
 
         :param      binary_data:    a binary string
         :param      verbose         True to display the debug messgae, False to turn off debug message
-        :return:    (p_value, bool) A tuple which contain the p_value and result of frequency_test(True or False)
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
 
         length_of_binary_data = len(binary_data)
         # Form the normalized (-1, +1) sequence X in which the zeros and ones of the input sequence (ε)
         # are converted to values of –1 and +1 via X = X1, X2, … , Xn, where Xi = 2εi – 1.
-        sequence_x = zeros(length_of_binary_data)
+        sequence_x = np.zeros(length_of_binary_data)
         for i in range(len(binary_data)):
             if binary_data[i] == '0':
                 sequence_x[i] = -1.0
@@ -41,18 +35,18 @@ class RandomExcursions:
                 sequence_x[i] = 1.0
 
         # Compute partial sums Si of successively larger subsequences, each starting with x1. Form the set S
-        cumulative_sum = cumsum(sequence_x)
+        cumulative_sum = np.cumsum(sequence_x)
 
         # Form a new sequence S' by attaching zeros before and after the set S. That is, S' = 0, s1, s2, … , sn, 0.
-        cumulative_sum = append(cumulative_sum, [0])
-        cumulative_sum = append([0], cumulative_sum)
+        cumulative_sum = np.append(cumulative_sum, [0])
+        cumulative_sum = np.append([0], cumulative_sum)
 
         # These are the states we are going to look at
-        x_values = array([-4, -3, -2, -1, 1, 2, 3, 4])
+        x_values = np.array([-4, -3, -2, -1, 1, 2, 3, 4])
         index = x_values.tolist().index(state)
 
         # Identify all the locations where the cumulative sum revisits 0
-        position = where(cumulative_sum == 0)[0]
+        position = np.where(cumulative_sum == 0)[0]
         # For this identify all the cycles
         cycles = []
         for pos in range(len(position) - 1):
@@ -63,17 +57,17 @@ class RandomExcursions:
         state_count = []
         for cycle in cycles:
             # Determine the number of times each cycle visits each state
-            state_count.append(([len(where(cycle == state)[0]) for state in x_values]))
-        state_count = transpose(clip(state_count, 0, 5))
+            state_count.append(([len(np.where(cycle == state)[0]) for state in x_values]))
+        state_count = np.transpose(np.clip(state_count, 0, 5))
 
         su = []
         for cycle in range(6):
             su.append([(sct == cycle).sum() for sct in state_count])
-        su = transpose(su)
+        su = np.transpose(su)
 
         pi = ([([RandomExcursions.get_pi_value(uu, state) for uu in range(6)]) for state in x_values])
-        inner_term = num_cycles * array(pi)
-        xObs = sum(1.0 * (array(su) - inner_term) ** 2 / inner_term, axis=1)
+        inner_term = num_cycles * np.array(pi)
+        xObs = np.sum(1.0 * (np.array(su) - inner_term) ** 2 / inner_term, axis=1)
         p_values = ([gammaincc(2.5, cs / 2.0) for cs in xObs])
 
         if verbose:
@@ -90,13 +84,13 @@ class RandomExcursions:
         result = []
         count = 0
         for item in p_values:
-            result.append((states[count], x_values[count], xObs[count], item, (item >= 0.01)))
+            result.append((f"random_excursions_test_{states[count]}", item, (item >= 0.01)))
             count += 1
 
         return result
 
     @staticmethod
-    def variant_test(binary_data:str, verbose=False):
+    def variant_test(binary_data:str, verbose=False) -> List[Tuple[str, float, bool]]:
         """
         from the NIST documentation http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-22r1a.pdf
 
@@ -105,28 +99,28 @@ class RandomExcursions:
         :return:
         """
         length_of_binary_data = len(binary_data)
-        int_data = zeros(length_of_binary_data)
+        int_data = np.zeros(length_of_binary_data)
 
         for count in range(length_of_binary_data):
             int_data[count] = int(binary_data[count])
 
-        sum_int = (2 * int_data) - ones(len(int_data))
-        cumulative_sum = cumsum(sum_int)
+        sum_int = (2 * int_data) - np.ones(len(int_data))
+        cumulative_sum = np.cumsum(sum_int)
 
         li_data = []
         index = []
         for count in sorted(set(cumulative_sum)):
-            if abs(count) <= 9:
+            if np.abs(count) <= 9:
                 index.append(count)
-                li_data.append([count, len(where(cumulative_sum == count)[0])])
+                li_data.append([count, len(np.where(cumulative_sum == count)[0])])
 
         j = RandomExcursions.get_frequency(li_data, 0) + 1
 
         p_values = []
         for count in (sorted(set(index))):
             if not count == 0:
-                den = sqrt(2 * j * (4 * abs(count) - 2))
-                p_values.append(erfc(abs(RandomExcursions.get_frequency(li_data, count) - j) / den))
+                den = np.sqrt(2 * j * (4 * np.abs(count) - 2))
+                p_values.append(erfc(np.abs(RandomExcursions.get_frequency(li_data, count) - j) / den))
 
         count = 0
         # Remove 0 from li_data so the number of element will be equal to p_values
@@ -160,7 +154,7 @@ class RandomExcursions:
         result = []
         count = 0
         for item in p_values:
-            result.append((states[count], li_data[count][0], li_data[count][1], item, (item >= 0.01)))
+            result.append((f"random_excursions_test_{states[count]}", item, (item >= 0.01)))
             count += 1
 
         return result
@@ -171,11 +165,11 @@ class RandomExcursions:
         This method is used by the random_excursions method to get expected probabilities
         """
         if k == 0:
-            out = 1 - 1.0 / (2 * abs(x))
+            out = 1 - 1.0 / (2 * np.abs(x))
         elif k >= 5:
-            out = (1.0 / (2 * abs(x))) * (1 - 1.0 / (2 * abs(x))) ** 4
+            out = (1.0 / (2 * np.abs(x))) * (1 - 1.0 / (2 * np.abs(x))) ** 4
         else:
-            out = (1.0 / (4 * x * x)) * (1 - 1.0 / (2 * abs(x))) ** (k - 1)
+            out = (1.0 / (4 * x * x)) * (1 - 1.0 / (2 * np.abs(x))) ** (k - 1)
         return out
 
     @staticmethod

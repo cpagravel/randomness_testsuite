@@ -1,16 +1,14 @@
-from numpy import abs as abs
-from numpy import array as array
-from numpy import floor as floor
-from numpy import max as max
-from numpy import sqrt as sqrt
-from numpy import sum as sum
-from numpy import zeros as zeros
-from scipy.stats import norm as norm
+from typing import List, Tuple
+
+import numpy as np
+from scipy.stats import norm
 
 class CumulativeSums:
 
     @staticmethod
-    def cumulative_sums_test(binary_data:str, mode=0, verbose=False):
+    def cumulative_sums_test(
+            binary_data:str, mode=0, verbose=False
+    ) -> List[Tuple[str, float, bool]]:
         """
         from the NIST documentation http://csrc.nist.gov/publications/nistpubs/800-22-rev1a/SP800-22rev1a.pdf
 
@@ -25,12 +23,12 @@ class CumulativeSums:
         :param      mode            A switch for applying the test either forward through the input sequence (mode = 0)
                                     or backward through the sequence (mode = 1).
         :param      verbose         True to display the debug messgae, False to turn off debug message
-        :return:    (p_value, bool) A tuple which contain the p_value and result of frequency_test(True or False)
-
+        :return:    [(test_name, p_value, bool)] A tuple containing the test_name, p_value and
+            pass/fail result of the test.
         """
 
         length_of_binary_data = len(binary_data)
-        counts = zeros(length_of_binary_data)
+        counts = np.zeros(length_of_binary_data)
 
         # Determine whether forward or backward data
         if not mode == 0:
@@ -49,33 +47,36 @@ class CumulativeSums:
             counter += 1
         # Compute the test statistic z =max1≤k≤n|Sk|, where max1≤k≤n|Sk| is the largest of the
         # absolute values of the partial sums Sk.
-        abs_max = max(abs(counts))
+        abs_max = np.max(np.abs(counts))
 
-        start = int(floor(0.25 * floor(-length_of_binary_data / abs_max) + 1))
-        end = int(floor(0.25 * floor(length_of_binary_data / abs_max) - 1))
+        start = int(np.floor(0.25 * np.floor(-length_of_binary_data / abs_max) + 1))
+        end = int(np.floor(0.25 * np.floor(length_of_binary_data / abs_max) - 1))
 
         terms_one = []
         for k in range(start, end + 1):
-            sub = norm.cdf((4 * k - 1) * abs_max / sqrt(length_of_binary_data))
-            terms_one.append(norm.cdf((4 * k + 1) * abs_max / sqrt(length_of_binary_data)) - sub)
+            sub = norm.cdf((4 * k - 1) * abs_max / np.sqrt(length_of_binary_data))
+            terms_one.append(norm.cdf((4 * k + 1) * abs_max / np.sqrt(length_of_binary_data)) - sub)
 
-        start = int(floor(0.25 * floor(-length_of_binary_data / abs_max - 3)))
-        end = int(floor(0.25 * floor(length_of_binary_data / abs_max) - 1))
+        start = int(np.floor(0.25 * np.floor(-length_of_binary_data / abs_max - 3)))
+        end = int(np.floor(0.25 * np.floor(length_of_binary_data / abs_max) - 1))
 
         terms_two = []
         for k in range(start, end + 1):
-            sub = norm.cdf((4 * k + 1) * abs_max / sqrt(length_of_binary_data))
-            terms_two.append(norm.cdf((4 * k + 3) * abs_max / sqrt(length_of_binary_data)) - sub)
+            sub = norm.cdf((4 * k + 1) * abs_max / np.sqrt(length_of_binary_data))
+            terms_two.append(norm.cdf((4 * k + 3) * abs_max / np.sqrt(length_of_binary_data)) - sub)
 
-        p_value = 1.0 - sum(array(terms_one))
-        p_value += sum(array(terms_two))
+        p_value = 1.0 - np.sum(np.array(terms_one))
+        p_value += np.sum(np.array(terms_two))
 
         if verbose:
-            print('Cumulative Sums Test DEBUG BEGIN:')
-            print("\tLength of input:\t", length_of_binary_data)
-            print('\tMode:\t\t\t\t', mode)
-            print('\tValue of z:\t\t\t', abs_max)
-            print('\tP-Value:\t\t\t', p_value)
-            print('DEBUG END.')
-
-        return (p_value, (p_value >= 0.01))
+            print("Cumulative Sums Test:")
+            print("  {:<40}{:>20}".format("\tLength of input:\t", length_of_binary_data))
+            print("  {:<40}{:>20}".format("\tMode:\t\t\t\t", mode))
+            print("  {:<40}{:>20}".format("\tValue of z:\t\t\t", abs_max))
+            print("  {:<40}{:>20}".format("\tP-Value:\t\t\t", p_value))
+        if mode == 0:
+            test_type = "forwards"
+        elif mode == 1:
+            test_type = "backwards"
+        test_type = ""
+        return [(f"cumulative_sums_test_{test_type}", p_value, (p_value >= 0.01))]
